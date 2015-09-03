@@ -9,15 +9,16 @@ db_name = 'stacksdb'
 
 
 def _build_query(from_, to):
+    clauses = []
     if from_ is not None:
-        from_clause = 'time > {}s'.format(from_)
+        clauses.append('time > {}s'.format(from_))
 
     if to is not None:
-        to_clause = 'time < {}s'.format(to)
+        clauses.append('time < {}s'.format(to))
     q = 'SELECT stack FROM stacksample'
-    if from_ or to:
+    if clauses:
         q += ' WHERE '
-        q += ' AND '.join(from_clause, to_clause)
+        q += ' AND '.join(clauses)
     return q
 
 
