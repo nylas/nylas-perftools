@@ -1,5 +1,4 @@
 import time
-import datetime
 import click
 import requests
 import influxdb
@@ -16,17 +15,17 @@ def collect(host, port, db_name, **connect_args):
     except (requests.ConnectionError, requests.HTTPError) as exc:
         log.warning('Error collecting data', error=exc, host=host, port=port)
         return
-    now = datetime.datetime.utcnow().isoformat()
     data = resp.content.splitlines()
     elapsed = float(data[0].split()[1])
     granularity = float(data[1].split()[1])
     points = []
-    for stack in data[2:]:
+    for ind, stack in enumerate(data[2:]):
         points.append({
             'measurement': 'stacksample',
             'tags': {
                 'host': host,
-                'port': port
+                'port': port,
+                'seq': ind,
             },
             'fields': {
                 'stack': stack,
