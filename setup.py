@@ -5,9 +5,10 @@ setup(
     version='0.1',
     packages=find_packages(),
     install_requires=[
-        'requests',
-        'influxdb',
-        'flask'
+        'requests>=2.4.3',
+        'influxdb>=2.9.1',
+        'flask>=0.10.1',
+        'nylas-production-python>=0.2.3'
     ],
     data_files=[('stackcollector', ['flamegraph.pl'])]
 )

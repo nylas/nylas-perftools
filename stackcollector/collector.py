@@ -1,4 +1,5 @@
 import time
+import datetime
 import click
 import requests
 import influxdb
@@ -13,29 +14,34 @@ def collect(host, port, db_name, **connect_args):
         resp = requests.get('http://{}:{}?reset=true'.format(host, port))
         resp.raise_for_status()
     except (requests.ConnectionError, requests.HTTPError) as exc:
-        log.warning('Error collecting data', error=exc)
+        log.warning('Error collecting data', error=exc, host=host, port=port)
         return
+    now = datetime.datetime.utcnow().isoformat()
     data = resp.content.splitlines()
     elapsed = float(data[0].split()[1])
     granularity = float(data[1].split()[1])
-    stacks = '\n'.join(data[2:])
-    try:
-        client = influxdb.InfluxDBClient(database=db_name, **connect_args)
-        client.write_points([{
-            'measurement': 'stacks',
+    points = []
+    for stack in data[2:]:
+        points.append({
+            'measurement': 'stacksample',
             'tags': {
                 'host': host,
                 'port': port
             },
             'fields': {
-                'stacks': stacks,
+                'stack': stack,
                 'elapsed': elapsed,
                 'granularity': granularity
             }
-        }])
+        })
+    try:
+        client = influxdb.InfluxDBClient(database=db_name, **connect_args)
+        client.write_points(points)
     except (influxdb.exceptions.InfluxDBClientError,
             influxdb.exceptions.InfluxDBServerError) as exc:
-        log.warning('Error saving data', error=exc)
+        log.warning('Error saving data', error=exc, host=host, port=port)
+        return
+    log.info('Data collected', host=host, port=port)
 
 
 @click.command()
@@ -54,7 +60,6 @@ def run(db, host, nprocs, interval):
         for h in host:
             for port in range(16384, 16384 + nprocs):
                 collect(h, port, db)
-                log.info('Data collected')
         time.sleep(interval)
 
 
