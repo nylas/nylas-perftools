@@ -26,6 +26,7 @@ rect.parent {
 
 .label {
   pointer-events: none;
+  white-space: nowrap;
   text-overflow: ellipsis;
   font-size: 11;
   margin-left: 4px;
@@ -42,8 +43,8 @@ rect.parent {
   <svg width="2400" height="600">
     <g class="partition"></g>
   </svg>
-<div id="focusedframe"></div>
-<div id="timescale"></div>
+  <div><span id="details"></span></div>
+  <div id="timescale"></div>
 <script type="text/javascript">
 
 
@@ -62,6 +63,30 @@ function highlight_repeats(elem) {
     }
 }
 
+function clear_repeats(elem) {
+    var matches = document.getElementsByName(elem.name);
+    if (matches) {
+        [].forEach.call(matches, clear);
+    }
+}
+
+function s(elem) {
+    highlight_repeats(elem);
+    details = document.getElementById("details");
+    details.innerText = label(elem);
+}
+
+function c(elem) {
+    clear_repeats(elem);
+    details = document.getElementById("details");
+    details.innerText = "";
+}
+
+function label(d) {
+    return d.name + " (" + d3.round(100 * d.dx, 3) + "%, " + d.value + " samples)";
+}
+
+
 d3.select("#filter").on("keyup", function() {
     var query = this.value;
 
@@ -71,13 +96,6 @@ d3.select("#filter").on("keyup", function() {
         [].forEach.call(matches, highlight);
     }
 })
-
-function clear_repeats(elem) {
-    var matches = document.getElementsByName(elem.name);
-    if (matches) {
-        [].forEach.call(matches, clear);
-    }
-}
 
 function augment(root) {
   // Augment partitioning layout with "dummy" nodes so that internal nodes'
@@ -115,10 +133,6 @@ var vis = d3.select("#body").append("div")
   .attr("width", w)
   .attr("height", h);
 
-//tip = d3.tip().attr('class', 'd3-tip').offset([-10, 0]).html(function(d) { return d.name; });
-//vis.call(tip)
-
-
 // Support more concise JSON keys
 var partition = d3.layout.partition()
   .sort(function(a, b) {return d3.ascending(a.name, b.name)})
@@ -141,15 +155,15 @@ d3.json("/data?threshold=.001", function(root) {
       .attr("transform", function(d) { return "translate(" + x(d.x) + "," + (h - y(d.depth)) + ")"; })
       .attr("class", "frame")
       .attr("name", function(d) { return d.name; })
-      .on('mouseenter', function (obj) {highlight_repeats(obj);})
-      .on('mouseleave', function (obj) {clear_repeats(obj);})
-
-    //g.append("svg:title").text(function(d) { return d.name });
+      .on('mouseenter', s)
+      .on('mouseleave', c)
 
     rect = g.append("svg:rect")
       .attr("width", function(d) { return d.dx * kx })
       .attr("height", function(d) { return frameheight; })
       .style("opacity", function(d) {return d.dummy ? 0 : 1;})
+
+    g.append("svg:title").text(label);
 
     g.append("foreignObject")
       .attr("class", "foreignObject")
@@ -158,7 +172,7 @@ d3.json("/data?threshold=.001", function(root) {
       .append("xhtml:div")
       .attr("class", "label")
       .style("display", function (d) { return d.dx * kx < 25 ? "none" : "block";})
-      .text(function(d) { return d.name; })
+      .text(label)
 });
 
 
