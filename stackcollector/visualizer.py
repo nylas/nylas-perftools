@@ -1,28 +1,21 @@
-import influxdb
 from flask import Flask, request, jsonify, render_template
+from flask.ext.sqlalchemy import SQLAlchemy
 
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-db_name = 'stacksdb'
+app.config['SQLALCHEMY_DATABASE_URI'] = ('postgresql+psycopg2://'
+                                         'test:test@localhost/test')
+
+db = SQLAlchemy(app)
 
 
-def _build_query(from_=None, to=None, host=None):
-    clauses = []
-    if from_ is not None:
-        clauses.append('time > {}s'.format(from_))
-
-    if to is not None:
-        clauses.append('time < {}s'.format(to))
-
-    if host is not None:
-        clauses.append('host = {}'.format(host))
-
-    q = 'SELECT stack FROM stacksample'
-    if clauses:
-        q += ' WHERE '
-        q += ' AND '.join(clauses)
-    return q
+class Sample(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, index=True)
+    host = db.Column(db.String(255))
+    port = db.Column(db.Integer)
+    sample = db.Column(db.Text)
 
 
 class Node(object):
@@ -72,15 +65,13 @@ def data():
     from_ = request.args.get('from')
     to = request.args.get('to')
     host = request.args.get('host')
-    q = _build_query(from_, to, host)
-
-    client = influxdb.InfluxDBClient(database=db_name)
-    resultset = client.query(q)
     threshold = float(request.args.get('threshold', 0))
     root = Node('root')
-    for point in resultset.get_points():
-        stack = point['stack']
-        root.add_raw(stack)
+    # TODO(emfree): batch result rows
+    for sample in Sample.query.all():
+        stacks = sample.sample.split('\n')
+        for stack in stacks:
+            root.add_raw(stack)
     return jsonify(root.serialize(threshold * root.value))
 
 
