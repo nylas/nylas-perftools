@@ -10,5 +10,4 @@ setup(
         'flask>=0.10.1',
         'nylas-production-python>=0.2.3'
     ],
-    data_files=[('stackcollector', ['flamegraph.pl'])]
 )
