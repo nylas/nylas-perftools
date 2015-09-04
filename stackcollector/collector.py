@@ -30,7 +30,8 @@ def collect(host, port, db_name, **connect_args):
     except Exception as exc:
         log.warning('Error saving data', error=exc, host=host, port=port)
         return
-    log.info('Data collected', host=host, port=port)
+    log.info('Data collected', host=host, port=port,
+             num_stacks=len(data) - 2)
 
 
 @click.command()

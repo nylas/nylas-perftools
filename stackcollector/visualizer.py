@@ -1,3 +1,4 @@
+import click
 from flask import Flask, request, jsonify, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
 
@@ -80,5 +81,10 @@ def render():
     return render_template('view.html')
 
 
+@click.command()
+@click.option('--port', type=int, default=9999)
+def run(port):
+   app.run(host='0.0.0.0', port=port)
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=9999)
+    run()
