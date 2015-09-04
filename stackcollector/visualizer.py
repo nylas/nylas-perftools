@@ -7,13 +7,17 @@ app.config['DEBUG'] = True
 db_name = 'stacksdb'
 
 
-def _build_query(from_, to):
+def _build_query(from_=None, to=None, host=None):
     clauses = []
     if from_ is not None:
         clauses.append('time > {}s'.format(from_))
 
     if to is not None:
         clauses.append('time < {}s'.format(to))
+
+    if host is not None:
+        clauses.append('host = {}'.format(host))
+
     q = 'SELECT stack FROM stacksample'
     if clauses:
         q += ' WHERE '
@@ -53,31 +57,31 @@ class Node(object):
             self.children[head] = child
         child.add_stack(frames[1:], value)
 
-
-def from_raw(rawlines):
-    root = Node('root')
-    for line in rawlines:
+    def add_raw(self, line):
         frames, value = line.split()
         frames = frames.split(';')
         try:
             value = int(value)
         except ValueError:
-            continue
-        root.add_stack(frames, value)
-    return root
+            return
+        self.add_stack(frames, value)
 
 
 @app.route('/data')
 def data():
     from_ = request.args.get('from')
     to = request.args.get('to')
-    threshold = float(request.args.get('threshold', 0))
+    host = request.args.get('host')
+    q = _build_query(from_, to, host)
 
     client = influxdb.InfluxDBClient(database=db_name)
-    resultset = client.query(_build_query(from_, to))
-    stacks = [point['stack'] for point in resultset.get_points()]
-    d = from_raw(stacks)
-    return jsonify(d.serialize(threshold * d.value))
+    resultset = client.query(q)
+    threshold = float(request.args.get('threshold', 0))
+    root = Node('root')
+    for point in resultset.get_points():
+        stack = point['stack']
+        root.add_raw(stack)
+    return jsonify(root.serialize(threshold * root.value))
 
 
 @app.route('/')
