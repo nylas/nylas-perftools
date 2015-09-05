@@ -16,7 +16,6 @@
 
 rect {
   stroke: #eee;
-  fill: #aaa;
   fill-opacity: .8;
 }
 
@@ -84,6 +83,23 @@ function c(elem) {
 
 function label(d) {
     return d.name + " (" + d3.round(100 * d.dx, 3) + "%, " + d.value + " samples)";
+}
+
+function color(name) {
+
+    var hash = 0, i, chr, len;
+    if (name) {
+        for (i = 0, len = name.length; i < len; i++) {
+            if (name[i] == '(') { break; }
+            chr = name.charCodeAt(i);
+            hash  = ((hash << 5) - hash) + chr;
+            hash |= 0; // Convert to 32bit integer
+        }
+    }
+    hash = Math.abs((hash % 256) / 256.);
+    var r = 50 + Math.round(60 * hash);
+    var gb = 135 + Math.round(90 * hash);
+    return "rgb(" + r + "," + gb + "," + gb + ")";
 }
 
 
@@ -161,6 +177,7 @@ d3.json("/data?threshold=.001", function(root) {
     rect = g.append("svg:rect")
       .attr("width", function(d) { return d.dx * kx })
       .attr("height", function(d) { return frameheight; })
+      .attr("fill", function(d) {return color(d.name); })
       .style("opacity", function(d) {return d.dummy ? 0 : 1;})
 
     g.append("svg:title").text(label);

@@ -1,4 +1,5 @@
 import click
+import sqlalchemy as sa
 from flask import Flask, request, jsonify, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
 
@@ -13,10 +14,12 @@ db = SQLAlchemy(app)
 
 class Sample(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime, index=True)
+    start = db.Column(db.DateTime, index=True)
+    end = db.Column(db.DateTime, index=True)
+    stack = db.Column(db.Text, index=True)
+    count = db.Column(db.Integer)
     host = db.Column(db.String(255))
     port = db.Column(db.Integer)
-    sample = db.Column(db.Text)
 
 
 class Node(object):
@@ -40,7 +43,7 @@ class Node(object):
                 res['children'] = serialized_children
         return res
 
-    def add_stack(self, frames, value):
+    def add(self, frames, value):
         self.value += value
         if not frames:
             return
@@ -49,7 +52,7 @@ class Node(object):
         if child is None:
             child = Node(name=head)
             self.children[head] = child
-        child.add_stack(frames[1:], value)
+        child.add(frames[1:], value)
 
     def add_raw(self, line):
         frames, value = line.split()
@@ -69,10 +72,11 @@ def data():
     threshold = float(request.args.get('threshold', 0))
     root = Node('root')
     # TODO(emfree): batch result rows
-    for sample in Sample.query.all():
-        stacks = sample.sample.split('\n')
-        for stack in stacks:
-            root.add_raw(stack)
+    stacks = Sample.query. \
+        with_entities(Sample.stack, Sample.count).all()
+    for stack, value in stacks:
+        frames = stack.split(';')
+        root.add(frames, value)
     return jsonify(root.serialize(threshold * root.value))
 
 
