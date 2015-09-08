@@ -18,7 +18,7 @@ def collect(host, port, bucket_delta):
         return
     data = resp.content.splitlines()
     try:
-        save(data, db, bucket_delta)
+        save(data, host, port, bucket_delta)
     except Exception as exc:
         log.warning('Error saving data', error=exc, host=host, port=port)
         return
@@ -26,7 +26,7 @@ def collect(host, port, bucket_delta):
              num_stacks=len(data) - 2)
 
 
-def save(data, host, port, db, bucket_delta):
+def save(data, host, port, bucket_delta):
     now = datetime.datetime.utcnow()
     i = 0
     for line in data[2:]:
@@ -35,7 +35,6 @@ def save(data, host, port, db, bucket_delta):
             value = int(value)
         except ValueError:
             continue
-
 
         sample = Sample.query.filter(Sample.stack == stack,
                                      Sample.end > now).first()
@@ -55,17 +54,16 @@ def save(data, host, port, db, bucket_delta):
 
 
 @click.command()
-@click.option('--db', default='stacksdb')
 @click.option('--host', '-h', multiple=True)
 @click.option('--nprocs', '-n', type=int, default=1)
 @click.option('--interval', '-i', type=int, default=60)
 @click.option('--bucket', type=int, default=900)
-def run(db, host, nprocs, interval, bucket):
+def run(host, nprocs, interval, bucket):
     bucket_delta = datetime.timedelta(seconds=bucket)
     while True:
         for h in host:
             for port in range(16384, 16384 + nprocs):
-                collect(h, port, db, bucket_delta)
+                collect(h, port, bucket_delta)
         time.sleep(interval)
 
 
