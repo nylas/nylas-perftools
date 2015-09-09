@@ -28,7 +28,7 @@ class Node(object):
             serialized_children = [
                 child.serialize(threshold)
                 for _, child in sorted(self.children.items())
-                if child.value >= threshold
+                if child.value > threshold
             ]
             if serialized_children:
                 res['children'] = serialized_children
