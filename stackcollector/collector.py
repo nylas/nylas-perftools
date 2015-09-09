@@ -63,7 +63,7 @@ def save(data, host, port, dbpath):
 @click.option('--dbpath', '-d', default='/var/lib/stackcollector/db')
 @click.option('--host', '-h', multiple=True)
 @click.option('--nprocs', '-n', type=int, default=1)
-@click.option('--interval', '-i', type=int, default=60)
+@click.option('--interval', '-i', type=int, default=600)
 def run(dbpath, host, nprocs, interval):
     while True:
         for h in host:

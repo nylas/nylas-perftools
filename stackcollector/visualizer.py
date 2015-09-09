@@ -1,10 +1,16 @@
+import calendar
 import click
+import dateparser
 from flask import Flask, request, jsonify, render_template
 from collector import getdb
 
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+
+
+def _parse_relative_date(datestr):
+    return calendar.timegm(dateparser.parse(datestr).utctimetuple())
 
 
 class Node(object):
@@ -51,16 +57,24 @@ class Node(object):
 
 @app.route('/data')
 def data():
-    #from_ = request.args.get('from')
-    #to = request.args.get('to')
-    #host = request.args.get('host')
+    from_ = request.args.get('from')
+    if from_ is not None:
+        from_ = _parse_relative_date(from_)
+    until = request.args.get('until')
+    if until is not None:
+        until = _parse_relative_date(until)
     threshold = float(request.args.get('threshold', 0))
     root = Node('root')
     with getdb('/var/lib/stackcollector/db') as db:
         keys = db.keys()
         for k in keys:
             entries = db[k].split()
-            value = sum(int(e.split(':')[-1]) for e in entries)
+            value = 0
+            for e in entries:
+                host, port, ts, v = e.split(':')
+                if ((from_ is None or ts >= from_) and
+                        (until is None or ts <= until)):
+                    value += int(v)
             frames = k.split(';')
             root.add(frames, value)
     return jsonify(root.serialize(threshold * root.value))

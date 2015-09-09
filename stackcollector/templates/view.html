@@ -43,7 +43,6 @@ rect.parent {
     <g class="partition"></g>
   </svg>
   <div><span id="details"></span></div>
-  <div id="timescale"></div>
 <script type="text/javascript">
 
 
@@ -156,7 +155,7 @@ var partition = d3.layout.partition()
   .children(function(d) {return d.c || d.children;});
 
 
-d3.json("/data?threshold=.001", function(root) {
+d3.json("/data" + location.search, function(root) {
     augment(root);
     var nodes = partition(root);
     var kx = w / root.dx;
