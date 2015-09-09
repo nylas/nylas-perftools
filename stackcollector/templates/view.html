@@ -170,6 +170,7 @@ d3.json("/data?threshold=.001", function(root) {
       .attr("height", function(d) { return frameheight; })
       .attr("transform", function(d) { return "translate(" + x(d.x) + "," + (h - y(d.depth)) + ")"; })
       .attr("class", "frame")
+      .attr("name", function(d) { return d.name; })
       .on('mouseenter', s)
       .on('mouseleave', c)
 

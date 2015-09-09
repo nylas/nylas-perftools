@@ -46,7 +46,6 @@ def collect(dbpath, host, port):
 def save(data, host, port, dbpath):
     now = int(time.time())
     with getdb(dbpath) as db:
-        i = 0
         for line in data[2:]:
             try:
                 stack, value = line.split()
@@ -58,8 +57,6 @@ def save(data, host, port, dbpath):
                 db[stack] += entry
             else:
                 db[stack] = entry
-            print i
-            i += 1
 
 
 @click.command()
