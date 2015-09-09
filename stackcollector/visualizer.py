@@ -1,25 +1,10 @@
 import click
-import sqlalchemy as sa
 from flask import Flask, request, jsonify, render_template
-from flask.ext.sqlalchemy import SQLAlchemy
+from collector import getdb
 
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = ('postgresql+psycopg2://'
-                                         'test:test@localhost/test')
-
-db = SQLAlchemy(app)
-
-
-class Sample(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    start = db.Column(db.DateTime, index=True)
-    end = db.Column(db.DateTime, index=True)
-    stack = db.Column(db.Text, index=True)
-    count = db.Column(db.Integer)
-    host = db.Column(db.String(255))
-    port = db.Column(db.Integer)
 
 
 class Node(object):
@@ -61,22 +46,23 @@ class Node(object):
             value = int(value)
         except ValueError:
             return
-        self.add_stack(frames, value)
+        self.add(frames, value)
 
 
 @app.route('/data')
 def data():
-    from_ = request.args.get('from')
-    to = request.args.get('to')
-    host = request.args.get('host')
+    #from_ = request.args.get('from')
+    #to = request.args.get('to')
+    #host = request.args.get('host')
     threshold = float(request.args.get('threshold', 0))
     root = Node('root')
-    # TODO(emfree): batch result rows
-    stacks = Sample.query. \
-        with_entities(Sample.stack, Sample.count).all()
-    for stack, value in stacks:
-        frames = stack.split(';')
-        root.add(frames, value)
+    with getdb('/var/lib/stackcollector/db') as db:
+        keys = db.keys()
+        for k in keys:
+            entries = db[k].split()
+            value = sum(int(e.split(':')[-1]) for e in entries)
+            frames = k.split(';')
+            root.add(frames, value)
     return jsonify(root.serialize(threshold * root.value))
 
 
@@ -88,7 +74,7 @@ def render():
 @click.command()
 @click.option('--port', type=int, default=9999)
 def run(port):
-   app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port)
 
 if __name__ == '__main__':
     run()

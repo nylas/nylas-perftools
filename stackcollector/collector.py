@@ -1,15 +1,32 @@
-import datetime
+import contextlib
+import gdbm
 import time
 import click
 import requests
 from nylas.logging import get_logger, configure_logging
-from visualizer import Sample, db
 
 configure_logging()
 log = get_logger()
 
 
-def collect(host, port, bucket_delta):
+@contextlib.contextmanager
+def getdb(dbpath):
+    while True:
+        try:
+            handle = gdbm.open(dbpath, 'c')
+            break
+        except gdbm.error as exc:
+            if exc.args[0] == 11:
+                continue
+            else:
+                raise
+    try:
+        yield handle
+    finally:
+        handle.close()
+
+
+def collect(dbpath, host, port):
     try:
         resp = requests.get('http://{}:{}?reset=true'.format(host, port))
         resp.raise_for_status()
@@ -18,7 +35,7 @@ def collect(host, port, bucket_delta):
         return
     data = resp.content.splitlines()
     try:
-        save(data, host, port, bucket_delta)
+        save(data, host, port, dbpath)
     except Exception as exc:
         log.warning('Error saving data', error=exc, host=host, port=port)
         return
@@ -26,44 +43,35 @@ def collect(host, port, bucket_delta):
              num_stacks=len(data) - 2)
 
 
-def save(data, host, port, bucket_delta):
-    now = datetime.datetime.utcnow()
-    i = 0
-    for line in data[2:]:
-        try:
-            stack, value = line.split()
-            value = int(value)
-        except ValueError:
-            continue
+def save(data, host, port, dbpath):
+    now = int(time.time())
+    with getdb(dbpath) as db:
+        i = 0
+        for line in data[2:]:
+            try:
+                stack, value = line.split()
+            except ValueError:
+                continue
 
-        sample = Sample.query.filter(Sample.stack == stack,
-                                     Sample.end > now).first()
-        if sample:
-            sample.count += value
-        else:
-            sample = Sample(stack=stack,
-                            start=now,
-                            end=now + bucket_delta,
-                            count=value,
-                            host=host,
-                            port=port)
-        db.session.add(sample)
-        print i
-        i+= 1
-    db.session.commit()
+            entry = '{}:{}:{}:{} '.format(host, port, now, value)
+            if stack in db:
+                db[stack] += entry
+            else:
+                db[stack] = entry
+            print i
+            i += 1
 
 
 @click.command()
+@click.option('--dbpath', '-d', default='/var/lib/stackcollector/db')
 @click.option('--host', '-h', multiple=True)
 @click.option('--nprocs', '-n', type=int, default=1)
 @click.option('--interval', '-i', type=int, default=60)
-@click.option('--bucket', type=int, default=900)
-def run(host, nprocs, interval, bucket):
-    bucket_delta = datetime.timedelta(seconds=bucket)
+def run(dbpath, host, nprocs, interval):
     while True:
         for h in host:
             for port in range(16384, 16384 + nprocs):
-                collect(h, port, bucket_delta)
+                collect(dbpath, h, port)
         time.sleep(interval)
 
 

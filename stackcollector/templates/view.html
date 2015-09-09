@@ -170,7 +170,6 @@ d3.json("/data?threshold=.001", function(root) {
       .attr("height", function(d) { return frameheight; })
       .attr("transform", function(d) { return "translate(" + x(d.x) + "," + (h - y(d.depth)) + ")"; })
       .attr("class", "frame")
-      .attr("name", function(d) { return d.name; })
       .on('mouseenter', s)
       .on('mouseleave', c)
 
@@ -180,16 +179,20 @@ d3.json("/data?threshold=.001", function(root) {
       .attr("fill", function(d) {return color(d.name); })
       .style("opacity", function(d) {return d.dummy ? 0 : 1;})
 
-    g.append("svg:title").text(label);
-
-    g.append("foreignObject")
-      .attr("class", "foreignObject")
-      .attr("width", function (d) { return d.dx * kx; })
-      .attr("height", function (d) { return frameheight; })
-      .append("xhtml:div")
-      .attr("class", "label")
-      .style("display", function (d) { return d.dx * kx < 25 ? "none" : "block";})
-      .text(label)
+    g.each(function(d) {
+        if (!d.dummy) {
+            var thisGroup = d3.select(this);
+            thisGroup.append("svg:title").text(label);
+            thisGroup.append("foreignObject")
+              .attr("class", "foreignObject")
+              .attr("width", function (d) { return d.dx * kx; })
+              .attr("height", function (d) { return frameheight; })
+              .append("xhtml:div")
+              .attr("class", "label")
+              .style("display", function (d) { return d.dx * kx < 25 ? "none" : "block";})
+              .text(label)
+        }
+    });
 });
 
 
