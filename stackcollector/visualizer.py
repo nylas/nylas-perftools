@@ -84,7 +84,7 @@ def data():
 
 @app.route('/')
 def render():
-    return render_template('view.html')
+    return app.send_static_file('index.html')
 
 
 @click.command()

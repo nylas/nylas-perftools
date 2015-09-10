@@ -3,14 +3,9 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
   <script type="text/javascript" src="static/d3.js"></script>
-  <script type="text/javascript" src="static/d3.slider.js"></script>
-    <link rel="stylesheet" href="static/d3.slider.css" />
 <style type="text/css">
 
-.chart {
-  display: block;
-  margin: auto;
-  margin-top: 60px;
+body {
   font-size: 11px;
 }
 
@@ -39,9 +34,11 @@ rect.parent {
   <div id="searchbar">
     Filter: <input type="text" name="filter" id="filter">
   </div>
-  <svg width="2400" height="600">
-    <g class="partition"></g>
-  </svg>
+  <div>
+    <svg width="1200" height="600">
+      <g class="partition"></g>
+    </svg>
+  </div>
   <div><span id="details"></span></div>
 <script type="text/javascript">
 
@@ -132,21 +129,11 @@ function augment(root) {
   }
 }
 
-//slider = d3.select("#timescale").call(d3.slider());
-
-var w = 1600;
+var w = 1200;
   h = 600,
   frameheight = 18;
   x = d3.scale.linear().range([0, w]),
   y = d3.scale.linear().range([0, frameheight]);
-
-var vis = d3.select("#body").append("div")
-  .attr("class", "chart")
-  .style("width", w + "px")
-  .style("height", h + "px")
-  .append("svg:svg")
-  .attr("width", w)
-  .attr("height", h);
 
 // Support more concise JSON keys
 var partition = d3.layout.partition()
