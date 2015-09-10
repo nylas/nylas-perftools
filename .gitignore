@@ -1,2 +1,9 @@
 *.pyc
 
+bin/
+build/
+dist/
+include/
+lib/
+local/
+stackcollector.egg-info/

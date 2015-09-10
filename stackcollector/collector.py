@@ -62,12 +62,22 @@ def save(data, host, port, dbpath):
 @click.command()
 @click.option('--dbpath', '-d', default='/var/lib/stackcollector/db')
 @click.option('--host', '-h', multiple=True)
-@click.option('--nprocs', '-n', type=int, default=1)
+@click.option('--ports', '-p')
 @click.option('--interval', '-i', type=int, default=600)
-def run(dbpath, host, nprocs, interval):
+def run(dbpath, host, ports, interval):
+    # TODO(emfree) document port format; handle parsing errors
+    if '..' in ports:
+        start, end = ports.split('..')
+        start = int(start)
+        end = int(end)
+        ports = range(start, end + 1)
+    elif ',' in ports:
+        ports = [int(p) for p in ports.split(',')]
+    else:
+        ports = [int(ports)]
     while True:
         for h in host:
-            for port in range(16384, 16384 + nprocs):
+            for port in ports:
                 collect(dbpath, h, port)
         time.sleep(interval)
 
