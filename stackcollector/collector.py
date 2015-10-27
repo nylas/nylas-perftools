@@ -1,5 +1,5 @@
 import contextlib
-import gdbm
+import dbm
 import time
 import click
 import requests
@@ -13,9 +13,9 @@ log = get_logger()
 def getdb(dbpath):
     while True:
         try:
-            handle = gdbm.open(dbpath, 'c')
+            handle = dbm.open(dbpath, 'c')
             break
-        except gdbm.error as exc:
+        except dbm.error as exc:
             if exc.args[0] == 11:
                 continue
             else:
