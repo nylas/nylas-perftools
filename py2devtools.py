@@ -115,7 +115,8 @@ class Profiler(object):
 
     def start(self):
         sys.setprofile(self._profile)
-        self.started = timeit.default_timer()
+        if not self.started:
+            self.started = timeit.default_timer()
 
     def stop(self):
         sys.setprofile(None)
