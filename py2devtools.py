@@ -101,15 +101,17 @@ class Profiler(object):
                                frame.f_globals.get('__name__'))
 
     def output(self):
-        if not self.samples:
-            return {}
-        return json.dumps({
-            'startTime': self.started,
-            'endTime': 0.000001 * self.timestamps[-1],
-            'timestamps': self.timestamps,
-            'samples': self.samples,
-            'head': self.root.serialize()
-        })
+        if self.samples:
+            data = {
+                'startTime': self.started,
+                'endTime': 0.000001 * self.timestamps[-1],
+                'timestamps': self.timestamps,
+                'samples': self.samples,
+                'head': self.root.serialize()
+            }
+        else:
+            data = {}
+        return json.dumps(data)
 
     def start(self):
         sys.setprofile(self._profile)
