@@ -16,10 +16,15 @@ collection can be limited to a single greenlet by passing
 import json
 import sys
 import timeit
-import gevent
+
+try:
+    import gevent
+except ImportError:
+    gevent = None
 
 
 class Node(object):
+
     def __init__(self, name, id_):
         self.name = name
         self.id_ = id_
@@ -54,8 +59,10 @@ class Node(object):
 
 
 class Profiler(object):
+
     def __init__(self, target_greenlet=None, interval=0.0001):
-        self.target_greenlet_id = id(target_greenlet)
+        self.target_greenlet_id = (
+            id(target_greenlet) if target_greenlet else None)
         self.interval = interval
         self.started = None
         self.last_profile = None
@@ -73,21 +80,21 @@ class Profiler(object):
             self._record_frame(frame.f_back)
 
     def _record_frame(self, frame):
-        if (self.target_greenlet_id is None or
-                id(gevent.getcurrent()) == self.target_greenlet_id):
-            now = timeit.default_timer()
-            if self.last_profile is not None:
-                if now - self.last_profile < self.interval:
-                    return
-            self.last_profile = now
-            self.timestamps.append(int(1e6 * now))
-            stack = []
-            while frame is not None:
-                stack.append(self._format_frame(frame))
-                frame = frame.f_back
-            stack.reverse()
-            self.root.add(stack, self._idgenerator)
-            self.samples.append(self.nextId)
+        if self.target_greenlet_id and id(gevent.getcurrent()) != self.target_greenlet_id:
+            return
+        now = timeit.default_timer()
+        if self.last_profile is not None:
+            if now - self.last_profile < self.interval:
+                return
+        self.last_profile = now
+        self.timestamps.append(int(1e6 * now))
+        stack = []
+        while frame is not None:
+            stack.append(self._format_frame(frame))
+            frame = frame.f_back
+        stack.reverse()
+        self.root.add(stack, self._idgenerator)
+        self.samples.append(self.nextId)
 
     def _format_frame(self, frame):
         return '{}({})'.format(frame.f_code.co_name,
