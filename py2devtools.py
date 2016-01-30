@@ -55,7 +55,10 @@ class Node(object):
 
 class Profiler(object):
     def __init__(self, target_greenlet=None, interval=0.0001):
-        self.target_greenlet_id = id(target_greenlet)
+        if target_greenlet is not None:
+            self.target_greenlet_id = id(target_greenlet)
+        else:
+            self.target_greenlet_id = None
         self.interval = interval
         self.started = None
         self.last_profile = None
