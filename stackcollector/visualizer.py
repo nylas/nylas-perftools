@@ -65,7 +65,7 @@ def data():
         until = _parse_relative_date(until)
     threshold = float(request.args.get('threshold', 0))
     root = Node('root')
-    with getdb('/var/lib/stackcollector/db') as db:
+    with getdb(app.config['DBPATH']) as db:
         keys = db.keys()
         for k in keys:
             entries = db[k].split()
@@ -89,7 +89,9 @@ def render():
 
 @click.command()
 @click.option('--port', type=int, default=9999)
-def run(port):
+@click.option('--dbpath', '-d', default='/var/lib/stackcollector/db')
+def run(port, dbpath):
+    app.config['DBPATH'] = dbpath
     app.run(host='0.0.0.0', port=port)
 
 if __name__ == '__main__':
