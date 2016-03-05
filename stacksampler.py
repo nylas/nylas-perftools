@@ -12,13 +12,22 @@ in your program to start the profiler, and run the emitter in a new greenlet.
 Then curl localhost:16384 to get a list of stack frames and call counts.
 """
 
+from __future__ import print_function
+import sys
+import atexit
 import collections
 import signal
 import time
 from werkzeug.serving import BaseWSGIServer, WSGIRequestHandler
 from werkzeug.wrappers import Request, Response
-from nylas.logging import get_logger
-log = get_logger()
+try:
+    from nylas.logging import get_logger
+    logger = get_logger()
+except ImportError:
+    class _Logger(object):
+        def info(msg):
+            print(msg, file=sys.stderr)
+    logger = _Logger()
 
 
 class Sampler(object):
@@ -39,7 +48,8 @@ class Sampler(object):
         except ValueError:
             raise ValueError('Can only sample on the main thread')
 
-        signal.setitimer(signal.ITIMER_VIRTUAL, self.interval, 0)
+        signal.setitimer(signal.ITIMER_VIRTUAL, self.interval)
+        atexit.register(self.stop)
 
     def _sample(self, signum, frame):
         stack = []
@@ -49,7 +59,7 @@ class Sampler(object):
 
         stack = ';'.join(reversed(stack))
         self._stack_counts[stack] += 1
-        signal.setitimer(signal.ITIMER_VIRTUAL, self.interval, 0)
+        signal.setitimer(signal.ITIMER_VIRTUAL, self.interval)
 
     def _format_frame(self, frame):
         return '{}({})'.format(frame.f_code.co_name,
@@ -70,6 +80,13 @@ class Sampler(object):
     def reset(self):
         self._started = time.time()
         self._stack_counts = collections.defaultdict(int)
+
+    def stop(self):
+        self.reset()
+        signal.setitimer(signal.ITIMER_VIRTUAL, 0)
+
+    def __del__(self):
+        self.stop()
 
 
 class Emitter(object):
@@ -93,7 +110,7 @@ class Emitter(object):
         server = BaseWSGIServer(self.host, self.port, self.handle_request,
                                 _QuietHandler)
         server.log = lambda *args, **kwargs: None
-        log.info('Serving profiles on port {}'.format(self.port))
+        logger.info('Serving profiles on port {}'.format(self.port))
         server.serve_forever()
 
 
