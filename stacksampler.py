@@ -25,7 +25,7 @@ try:
     logger = get_logger()
 except ImportError:
     class _Logger(object):
-        def info(msg):
+        def info(self, msg):
             print(msg, file=sys.stderr)
     logger = _Logger()
 
