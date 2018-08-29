@@ -10,7 +10,5 @@ setup(
         'click',
         'dateparser'
     ],
-    package_dir={'stackcollector': 'nylas-perftools/stackcollector'},
-    package_data={'stackcollector': ['static/*']},
     include_package_data=True,
 )
