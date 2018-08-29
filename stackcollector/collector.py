@@ -4,6 +4,7 @@ import time
 import click
 import requests
 import logging
+import sys
 
 
 log = logging.getLogger(__name__)
@@ -86,4 +87,5 @@ def run(dbpath, host, ports, interval, count):
 
 
 if __name__ == '__main__':
+    log.addHandler(logging.StreamHandler(sys.stderr))
     run()
