@@ -55,7 +55,7 @@ class Node(object):
         self.add(frames, value)
 
 
-@app.route('/')
+@app.route('/data')
 def data():
     from_ = request.args.get('from')
     if from_ is not None:
