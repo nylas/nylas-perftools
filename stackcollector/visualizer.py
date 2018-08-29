@@ -68,6 +68,7 @@ def data():
     with getdb(app.config['DBPATH']) as db:
         keys = db.keys()
         for k in keys:
+            k = str(k, 'utf8')
             entries = str(db[k], 'utf8').split()
             value = 0
             for e in entries:
