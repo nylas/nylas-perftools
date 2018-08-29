@@ -50,7 +50,7 @@ def save(data, host, port, dbpath):
             except ValueError:
                 continue
 
-            entry = '{}:{}:{}:{} '.format(host, port, now, value)
+            entry = bytes('{}:{}:{}:{} '.format(host, port, now, value), 'utf8')
             if stack in db:
                 db[stack] += entry
             else:
