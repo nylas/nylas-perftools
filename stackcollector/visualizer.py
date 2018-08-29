@@ -2,7 +2,7 @@ import calendar
 import click
 import dateparser
 from flask import Flask, request, jsonify, render_template
-from collector import getdb
+from stackcollector.collector import getdb
 
 
 app = Flask(__name__)
