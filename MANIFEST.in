@@ -1,1 +1,1 @@
-graft "nylas-perftools/stackcollector/static"
+graft stackcollector/static
