@@ -34,7 +34,7 @@ def collect(dbpath, host, port):
     except (requests.ConnectionError, requests.HTTPError) as exc:
         log.warning('Error collecting data', error=exc, host=host, port=port)
         return
-    data = resp.content.splitlines()
+    data = resp.text.splitlines()
     try:
         save(data, host, port, dbpath)
     except Exception as exc:
