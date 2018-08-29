@@ -55,7 +55,7 @@ class Node(object):
         self.add(frames, value)
 
 
-@app.route('/data')
+@app.route('/')
 def data():
     from_ = request.args.get('from')
     if from_ is not None:
@@ -68,7 +68,7 @@ def data():
     with getdb(app.config['DBPATH']) as db:
         keys = db.keys()
         for k in keys:
-            entries = db[k].split()
+            entries = str(db[k], 'utf8').split()
             value = 0
             for e in entries:
                 host, port, ts, v = e.split(':')
