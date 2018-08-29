@@ -10,4 +10,5 @@ setup(
         'click',
         'dateparser'
     ],
+    include_package_data=True
 )
