@@ -1,5 +1,10 @@
 This is a collection of minimalist utilities for profiling Python programs. The motivation behind them is described in our [blog post](https://www.nylas.com/blog/performance).
 
+# Installation
+```
+pip install git+https://github.com/amorgun/nylas-perftools.git
+```
+
 
 # py2devtools
 The profile visualizer that's built into the Chrome developer tools is pretty rad. `py2devtools.py` contains instrumentation to create a `.cpuprofile` file from a Python program that can be loaded into the developer tools. See the module docstring for details.

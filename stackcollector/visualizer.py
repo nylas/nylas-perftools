@@ -2,7 +2,7 @@ import calendar
 import click
 import dateparser
 from flask import Flask, request, jsonify, render_template
-from collector import getdb
+from stackcollector.collector import getdb
 
 
 app = Flask(__name__)
@@ -68,7 +68,8 @@ def data():
     with getdb(app.config['DBPATH']) as db:
         keys = db.keys()
         for k in keys:
-            entries = db[k].split()
+            k = str(k, 'utf8')
+            entries = str(db[k], 'utf8').split()
             value = 0
             for e in entries:
                 host, port, ts, v = e.split(':')

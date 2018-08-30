@@ -20,14 +20,12 @@ import signal
 import time
 from werkzeug.serving import BaseWSGIServer, WSGIRequestHandler
 from werkzeug.wrappers import Request, Response
-try:
-    from nylas.logging import get_logger
-    logger = get_logger()
-except ImportError:
-    class _Logger(object):
-        def info(msg):
-            print(msg, file=sys.stderr)
-    logger = _Logger()
+
+
+class _Logger(object):
+    def info(self, msg):
+        print(msg, file=sys.stderr)
+logger = _Logger()
 
 
 class Sampler(object):
