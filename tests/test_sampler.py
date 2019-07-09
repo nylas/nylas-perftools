@@ -17,7 +17,7 @@ s = Sampler()
 def test_foo():
     s.start()
     fn()
-    print s.output_stats()
+    print((s.output_stats()))
 
 
 if __name__ == '__main__':

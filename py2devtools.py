@@ -4,7 +4,8 @@ Chrome developer tools.
 Example usage:
 >>> profiler = Profiler()
 >>> profiler.start()
->>> my_expensive_code()
+>>> # noinspection PyUnresolvedReferences
+my_expensive_code()
 >>> profiler.stop()
 >>> with open('my.cpuprofile', 'w') as f:
 ...    f.write(profiler.output())
@@ -35,7 +36,7 @@ class Node(object):
         res = {
             'functionName': self.name,
             'hitCount': self.hitCount,
-            'children': [c.serialize() for c in self.children.values()],
+            'children': [c.serialize() for c in list(self.children.values())],
             'scriptId': '1',
             'url': '',
             'lineNumber': 1,
@@ -75,7 +76,7 @@ class Profiler(object):
         self.nextId += 1
         return self.nextId
 
-    def _profile(self, frame, event, arg):
+    def _profile(self, frame, event):
         if event == 'call':
             self._record_frame(frame.f_back)
 
@@ -96,7 +97,8 @@ class Profiler(object):
         self.root.add(stack, self._idgenerator)
         self.samples.append(self.nextId)
 
-    def _format_frame(self, frame):
+    @staticmethod
+    def _format_frame(frame):
         return '{}({})'.format(frame.f_code.co_name,
                                frame.f_globals.get('__name__'))
 
@@ -118,5 +120,6 @@ class Profiler(object):
         if not self.started:
             self.started = timeit.default_timer()
 
-    def stop(self):
+    @staticmethod
+    def stop():
         sys.setprofile(None)

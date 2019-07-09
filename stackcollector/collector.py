@@ -11,11 +11,12 @@ log = get_logger()
 
 @contextlib.contextmanager
 def getdb(dbpath):
+    handle = None
     while True:
         try:
-            handle = dbm.open(dbpath, 'c')
+            handle = dbm.ndbm.open(dbpath, 'c')
             break
-        except dbm.error as exc:
+        except dbm.ndbm.error as exc:
             if exc.args[0] == 11:
                 continue
             else:
@@ -70,7 +71,7 @@ def run(dbpath, host, ports, interval):
         start, end = ports.split('..')
         start = int(start)
         end = int(end)
-        ports = range(start, end + 1)
+        ports = list(range(start, end + 1))
     elif ',' in ports:
         ports = [int(p) for p in ports.split(',')]
     else:

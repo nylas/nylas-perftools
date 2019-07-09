@@ -1,8 +1,8 @@
 import calendar
 import click
 import dateparser
-from flask import Flask, request, jsonify, render_template
-from collector import getdb
+from flask import Flask, request, jsonify
+from .collector import getdb
 
 
 app = Flask(__name__)
@@ -66,7 +66,7 @@ def data():
     threshold = float(request.args.get('threshold', 0))
     root = Node('root')
     with getdb(app.config['DBPATH']) as db:
-        keys = db.keys()
+        keys = list(db.keys())
         for k in keys:
             entries = db[k].split()
             value = 0
@@ -93,6 +93,7 @@ def render():
 def run(port, dbpath):
     app.config['DBPATH'] = dbpath
     app.run(host='0.0.0.0', port=port)
+
 
 if __name__ == '__main__':
     run()
